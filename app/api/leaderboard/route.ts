@@ -75,7 +75,7 @@ export async function GET() {
         }
       })
 
-    return NextResponse.json({ success: true, leaderboard })
+    return NextResponse.json({ success: true, leaderboard }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     console.error("Leaderboard API error:", error)
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })

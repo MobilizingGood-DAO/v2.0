@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Users, Heart, MessageCircle, Send, Target, BarChart2 } from "lucide-react"
+import { ArrowLeft, Users, Heart, MessageCircle, Send, Target, BarChart2, TrendingUp, TrendingDown, Info } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -493,7 +493,7 @@ export default function Community() {
             <Card className="bg-white/80 backdrop-blur-sm border-emerald-200">
               <CardHeader>
                 <CardTitle>Community Insights</CardTitle>
-                <CardDescription>See how the community is doing</CardDescription>
+                <CardDescription>See how the community is doing in real time</CardDescription>
               </CardHeader>
               <CardContent>
                 {isLoadingInsights ? (
@@ -502,21 +502,46 @@ export default function Community() {
                   <div className="text-center text-red-500 py-8">{insightsError}</div>
                 ) : insights ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-4">
+                    {/* Average Mood Today */}
                     <div className="p-4 bg-emerald-50 rounded-lg text-center">
-                      <div className="text-xs text-gray-500 mb-1">Average Mood (Today)</div>
-                      <div className="text-2xl font-bold text-emerald-700">{insights.avgMoodToday !== null ? insights.avgMoodToday.toFixed(2) : "-"}</div>
+                      <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mb-1">
+                        <Info className="w-3 h-3" /> Average Mood (Today)
+                      </div>
+                      <div className="text-2xl font-bold text-emerald-700 flex items-center justify-center gap-2">
+                        {insights.avgMoodToday !== null ? insights.avgMoodToday.toFixed(2) : "-"}
+                        {insights.avgMoodToday !== null && insights.avgMoodAll !== null && (
+                          insights.avgMoodToday > insights.avgMoodAll ? (
+                            <TrendingUp className="w-5 h-5 text-green-500" title="Up from all-time" />
+                          ) : insights.avgMoodToday < insights.avgMoodAll ? (
+                            <TrendingDown className="w-5 h-5 text-red-500" title="Down from all-time" />
+                          ) : null
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">Compared to all-time average</div>
                     </div>
+                    {/* Average Mood All-Time */}
                     <div className="p-4 bg-cyan-50 rounded-lg text-center">
-                      <div className="text-xs text-gray-500 mb-1">Average Mood (All-Time)</div>
+                      <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mb-1">
+                        <Info className="w-3 h-3" /> Average Mood (All-Time)
+                      </div>
                       <div className="text-2xl font-bold text-cyan-700">{insights.avgMoodAll !== null ? insights.avgMoodAll.toFixed(2) : "-"}</div>
+                      <div className="text-xs text-gray-600 mt-1">Lifetime community mood</div>
                     </div>
+                    {/* Check-ins Today */}
                     <div className="p-4 bg-purple-50 rounded-lg text-center">
-                      <div className="text-xs text-gray-500 mb-1">Check-ins Today</div>
+                      <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mb-1">
+                        <Info className="w-3 h-3" /> Check-ins Today
+                      </div>
                       <div className="text-2xl font-bold text-purple-700">{insights.checkinsToday}</div>
+                      <div className="text-xs text-gray-600 mt-1">Total daily check-ins</div>
                     </div>
+                    {/* Total Goals Set */}
                     <div className="p-4 bg-pink-50 rounded-lg text-center">
-                      <div className="text-xs text-gray-500 mb-1">Total Goals Set</div>
+                      <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mb-1">
+                        <Info className="w-3 h-3" /> Total Goals Set
+                      </div>
                       <div className="text-2xl font-bold text-pink-700">{insights.totalGoals}</div>
+                      <div className="text-xs text-gray-600 mt-1">All-time goals created</div>
                     </div>
                   </div>
                 ) : (
