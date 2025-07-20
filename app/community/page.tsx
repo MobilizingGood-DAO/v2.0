@@ -11,6 +11,7 @@ import { ArrowLeft, Users, Heart, MessageCircle, Send, Target, BarChart2, Trendi
 import { useAuth } from "@/hooks/useAuth"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { useToast } from "@/components/ui/use-toast"
 
 interface CommunityPost {
   id: string
@@ -57,6 +58,7 @@ export default function Community() {
   const [tipAmount, setTipAmount] = useState("")
   const [tipLoading, setTipLoading] = useState(false)
   const { user, refreshUser } = useAuth()
+  const { toast } = useToast()
   const router = useRouter()
 
   useEffect(() => {
@@ -146,13 +148,33 @@ export default function Community() {
         await refreshUser()
         setNewPost("")
         await loadPosts()
-        alert(`Post shared! You earned ${data.points_earned} CARE points!`)
+        if (data.points_awarded === false) {
+          toast({
+            title: "Daily Limit Reached",
+            description: data.message || "You have reached the daily points limit for posts.",
+            variant: "destructive",
+          })
+        } else {
+          toast({
+            title: "Post shared!",
+            description: `You earned ${data.points_earned} CARE points!`,
+            variant: "success",
+          })
+        }
       } else {
-        alert(data.error || "Failed to share post")
+        toast({
+          title: "Error",
+          description: data.error || "Failed to share post",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error sharing post:", error)
-      alert("Failed to share post")
+      toast({
+        title: "Error",
+        description: "Failed to share post",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
@@ -169,14 +191,34 @@ export default function Community() {
       const data = await response.json()
       if (data.success) {
         await refreshUser()
-        alert(`Goal shared to community! You earned ${data.points_earned} CARE points!`)
+        if (data.points_awarded === false) {
+          toast({
+            title: "Daily Limit Reached",
+            description: data.message || "You have reached the daily points limit for shared goals.",
+            variant: "destructive",
+          })
+        } else {
+          toast({
+            title: "Goal shared to community!",
+            description: `You earned ${data.points_earned} CARE points!`,
+            variant: "success",
+          })
+        }
         setActiveTab("feed")
         await loadPosts()
       } else {
-        alert(data.error || "Failed to share goal")
+        toast({
+          title: "Error",
+          description: data.error || "Failed to share goal",
+          variant: "destructive",
+        })
       }
     } catch (error) {
-      alert("Failed to share goal")
+      toast({
+        title: "Error",
+        description: "Failed to share goal",
+        variant: "destructive",
+      })
     } finally {
       setShareLoading(null)
     }

@@ -73,6 +73,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "You've already posted today!" }, { status: 400 })
     }
 
+    // Check how many posts user has made today
+    const { data: postsToday, error: postsTodayError } = await supabase
+      .from("community_posts")
+      .select("id")
+      .eq("user_id", user.id)
+      .gte("created_at", today)
+      .lt("created_at", today + "T23:59:59")
+    if (postsTodayError) throw postsTodayError
+    const postCount = postsToday ? postsToday.length : 0
+    if (postCount >= 2) {
+      // Allow posting, but no points
+      const { error: postError } = await supabase.from("community_posts").insert({
+        user_id: user.id,
+        content,
+        likes_count: 0,
+        comments_count: 0,
+      })
+      if (postError) throw postError
+      return NextResponse.json({
+        success: true,
+        points_earned: 0,
+        new_total: user.care_points,
+        points_awarded: false,
+        message: "You have reached the daily points limit for posts."
+      })
+    }
+
     // Create post
     const { error: postError } = await supabase.from("community_posts").insert({
       user_id: user.id,
@@ -101,6 +128,7 @@ export async function POST(request: NextRequest) {
       success: true,
       points_earned: pointsEarned,
       new_total: newPoints,
+      points_awarded: true,
     })
   } catch (error) {
     console.error("Error creating post:", error)

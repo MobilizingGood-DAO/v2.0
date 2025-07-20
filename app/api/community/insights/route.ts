@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     // Number of check-ins today
     const { count: checkinsToday, error: checkinError } = await supabase
-      .from("checkin")
+      .from("daily_checkins")
       .select("id", { count: "exact", head: true })
       .gte("created_at", today)
       .lt("created_at", today + "T23:59:59")

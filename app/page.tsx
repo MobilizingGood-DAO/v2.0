@@ -186,6 +186,34 @@ export default function HomePage() {
               </Link>
             </CardContent>
           </Card>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-yellow-500" />
+                Goals
+              </CardTitle>
+              <CardDescription>Set, track, and share your wellness goals</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/goals">
+                <Button className="w-full">Manage Goals</Button>
+              </Link>
+            </CardContent>
+          </Card>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-indigo-500" />
+                GOOD CARE FAQ
+              </CardTitle>
+              <CardDescription>Ask questions and get answers from the community</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/faq">
+                <Button className="w-full">Go to FAQ</Button>
+              </Link>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

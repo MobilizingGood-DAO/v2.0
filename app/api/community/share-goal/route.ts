@@ -26,6 +26,35 @@ export async function POST(request: NextRequest) {
     if (userError || !user) {
       return NextResponse.json({ success: false, error: "User not found" }, { status: 404 })
     }
+    // Check how many goals user has shared today
+    const today = new Date().toISOString().split("T")[0]
+    const { data: sharedToday, error: sharedTodayError } = await supabase
+      .from("community_posts")
+      .select("id")
+      .eq("user_id", user_id)
+      .eq("type", "goal_share")
+      .gte("created_at", today)
+      .lt("created_at", today + "T23:59:59")
+    if (sharedTodayError) throw sharedTodayError
+    const sharedCount = sharedToday ? sharedToday.length : 0
+    if (sharedCount >= 2) {
+      // Allow sharing, but no points
+      // Insert post with type 'goal_share' (if not already set)
+      const { error: postError } = await supabase.from("community_posts").insert({
+        user_id,
+        content: goal.title + (goal.description ? ": " + goal.description : ""),
+        type: "goal_share",
+        likes_count: 0,
+        comments_count: 0,
+      })
+      if (postError) throw postError
+      return NextResponse.json({
+        success: true,
+        points_earned: 0,
+        points_awarded: false,
+        message: "You have reached the daily points limit for shared goals."
+      })
+    }
     // Create a community post
     const content = `Goal: ${goal.title}\n${goal.description || ""}`
     const { error: postError } = await supabase.from("community_posts").insert({
