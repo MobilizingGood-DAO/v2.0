@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Trophy, Medal, Crown, Star } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
+import { useLeaderboard } from "@/hooks/useLeaderboard"
 
 type LeaderboardEntry = {
   rank: number
@@ -29,31 +30,13 @@ type LeaderboardEntry = {
 
 export default function LeaderboardPage() {
   const { user } = useAuth()
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        const response = await fetch("/api/leaderboard")
-        const data = await response.json()
-
-        if (data.success) {
-          setLeaderboard(data.leaderboard)
-        } else {
-          setError(data.error || "Failed to load leaderboard")
-        }
-      } catch (err) {
-        console.error("Error fetching leaderboard:", err)
-        setError("Failed to load leaderboard")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchLeaderboard()
-  }, [])
+  const {
+    leaderboard,
+    isLoading: loading,
+    isError: error,
+    refresh,
+    totalUsers,
+  } = useLeaderboard({ period: "all-time", category: "overall", limit: 50 })
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -116,8 +99,8 @@ export default function LeaderboardPage() {
           </div>
           <Card>
             <CardContent className="p-8 text-center">
-              <p className="text-red-600 mb-4">{error}</p>
-              <Button onClick={() => window.location.reload()}>Try Again</Button>
+              <p className="text-red-600 mb-4">Leaderboard failed to load. Please try again.</p>
+              <Button onClick={() => refresh()}>Try Again</Button>
             </CardContent>
           </Card>
         </div>
@@ -136,6 +119,9 @@ export default function LeaderboardPage() {
             </Button>
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">Community Leaderboard</h1>
+          <Button variant="secondary" size="sm" className="ml-auto" onClick={() => refresh()}>
+            Refresh
+          </Button>
         </div>
 
         <Card className="mb-6">
@@ -186,14 +172,14 @@ export default function LeaderboardPage() {
                               </Badge>
                             )}
                           </h3>
-                          <p className="text-sm text-gray-500">{formatAddress(entry.wallet_address)}</p>
+                          <p className="text-sm text-gray-500">{entry.handle || formatAddress(entry.id)}</p>
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-blue-600 mb-1">{entry.care_points}</div>
+                      <div className="text-2xl font-bold text-blue-600 mb-1">{entry.points}</div>
                       <div className="text-xs text-gray-500 space-y-1">
-                        <div>{entry.user_stats?.current_streak} day streak</div>
+                        <div>{entry.streak} day streak</div>
                         <div>{entry.total_checkins} check-ins</div>
                       </div>
                     </div>
