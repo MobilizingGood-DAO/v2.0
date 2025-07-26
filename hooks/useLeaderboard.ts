@@ -35,8 +35,22 @@ export function useLeaderboard(options: UseLeaderboardOptions = {}) {
     revalidateOnFocus: true,
   })
 
+  // Map API response to expected format
+  const mappedLeaderboard = (data?.leaderboard || []).map((entry: any) => ({
+    rank: entry.rank,
+    id: entry.id,
+    name: entry.name,
+    handle: entry.wallet_address ? `${entry.wallet_address.slice(0, 6)}...${entry.wallet_address.slice(-4)}` : `@user${entry.id.slice(0, 8)}`,
+    avatar: "/placeholder.svg?height=40&width=40",
+    points: entry.care_points || 0,
+    streak: entry.current_streak || 0,
+    level: 1,
+    total_checkins: entry.total_checkins || 0,
+    longest_streak: entry.longest_streak || 0,
+  }))
+
   return {
-    leaderboard: (data?.leaderboard || []) as LeaderboardUser[],
+    leaderboard: mappedLeaderboard as LeaderboardUser[],
     isLoading,
     isError: error,
     refresh: mutate,
