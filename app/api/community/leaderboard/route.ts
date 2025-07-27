@@ -63,6 +63,7 @@ export async function GET() {
       .filter((user) => user.name && user.name.trim().length > 0)
       .map((user, index) => {
         const userStats = Array.isArray(user.user_stats) ? user.user_stats[0] : user.user_stats
+        console.log(`User ${user.name} (${user.id}): total_checkins = ${userStats?.total_checkins || 0}`)
         return {
           rank: index + 1,
           id: user.id,

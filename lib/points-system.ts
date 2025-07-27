@@ -98,7 +98,7 @@ export async function awardPoints(
     await supabase.from('user_stats').upsert({
       user_id: userId,
       total_points: newTotalPoints,
-      total_checkins: (currentStats?.total_checkins || 0) + 1,
+      total_checkins: activityType === 'checkin' ? (currentStats?.total_checkins || 0) + 1 : (currentStats?.total_checkins || 0),
       current_streak: streakDays,
       longest_streak: Math.max(currentStats?.longest_streak || 0, streakDays),
       level: newLevel,
