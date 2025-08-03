@@ -137,6 +137,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json()
 
+      setUser({
+  ...user,
+  username: user.name, // alias for compatibility
+})
+
       if (data.success && data.user) {
         setUser(data.user)
       } else {
