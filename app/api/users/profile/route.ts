@@ -1,126 +1,158 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { type NextRequest, NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
+
+// Type for expected JSON body
+interface UserPayload {
+  wallet_address: string;
+  name?: string;
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const { wallet_address, name } = await request.json()
+    const { wallet_address }: UserPayload = await request.json();
 
     if (!wallet_address) {
-      return NextResponse.json({ success: false, error: "Wallet address is required" }, { status: 400 })
+      return NextResponse.json(
+        { success: false, error: "Wallet address is required" },
+        { status: 400 }
+      );
     }
 
-    let query = supabase.from("users").select("*, user_stats(*)")
-    
-    query = (query as any).eq("wallet_address", wallet_address.toLowerCase())
-
-    const { data: user, error } = await query.single()
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("*, user_stats(*)")
+      .eq("wallet_address", wallet_address.toLowerCase())
+      .single();
 
     if (error && error.code !== "PGRST116") {
-      console.error("Error fetching user:", error)
-      return NextResponse.json({ success: false, error: "Failed to fetch user" }, { status: 500 })
+      console.error("Supabase fetch error:", error);
+      return NextResponse.json(
+        { success: false, error: "Failed to fetch user" },
+        { status: 500 }
+      );
     }
 
     if (!user) {
-      return NextResponse.json({ success: false, error: "User not found" }, { status: 404 })
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json({ success: true, user })
+    return NextResponse.json({ success: true, user });
   } catch (error) {
-    console.error("Error in POST /api/users/profile:", error)
-    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })
+    console.error("POST /api/users/profile error:", error);
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
-    const { wallet_address, name } = await request.json()
+    const { wallet_address, name }: UserPayload = await request.json();
 
     if (!wallet_address) {
-      return NextResponse.json({ success: false, error: "Wallet address is required" }, { status: 400 })
+      return NextResponse.json(
+        { success: false, error: "Wallet address is required" },
+        { status: 400 }
+      );
     }
 
-    // Insert user profile
-    const userData: any = {}
-    if (wallet_address) {
-      userData.wallet_address = wallet_address.toLowerCase()
-    }
-    if (name) {
-      userData.name = name
-    }
+    const newUserPayload: any = {
+      wallet_address: wallet_address.toLowerCase(),
+    };
 
-    // Insert user
+    if (name) newUserPayload.name = name;
+
     const { data: user, error: userError } = await supabase
       .from("users")
-      .insert(userData)
+      .insert(newUserPayload)
       .select()
-      .single()
+      .single();
 
     if (userError) {
-      console.error("Error creating user:", userError)
-      return NextResponse.json({ success: false, error: userError.message }, { status: 500 })
+      console.error("Insert user error:", userError);
+      return NextResponse.json(
+        { success: false, error: userError.message },
+        { status: 500 }
+      );
     }
 
-    // Insert user_stats row for this user
+    // Insert related user_stats
     const { error: statsError } = await supabase
       .from("user_stats")
-      .insert({ user_id: user.id })
+      .insert({ user_id: user.id });
 
     if (statsError) {
-      console.error("Error creating user_stats:", statsError)
-      return NextResponse.json({ success: false, error: statsError.message }, { status: 500 })
+      console.error("Insert user_stats error:", statsError);
+      return NextResponse.json(
+        { success: false, error: statsError.message },
+        { status: 500 }
+      );
     }
 
-    // Return user with stats
+    // Fetch full user with user_stats
     const { data: fullUser, error: fetchError } = await supabase
       .from("users")
       .select("*, user_stats(*)")
       .eq("id", user.id)
-      .single()
+      .single();
 
     if (fetchError) {
-      console.error("Error fetching new user with stats:", fetchError)
-      return NextResponse.json({ success: false, error: fetchError.message }, { status: 500 })
+      console.error("Refetch error:", fetchError);
+      return NextResponse.json(
+        { success: false, error: fetchError.message },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ success: true, user: fullUser })
+    return NextResponse.json({ success: true, user: fullUser });
   } catch (error) {
-    console.error("Error in PUT /api/users/profile:", error)
-    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })
+    console.error("PUT /api/users/profile error:", error);
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
 export async function PATCH(request: NextRequest) {
   try {
-    const { wallet_address, name } = await request.json()
+    const { wallet_address, name }: UserPayload = await request.json();
 
-    if ((!wallet_address) || !name) {
-      return NextResponse.json({ success: false, error: "Wallet address and name are required" }, { status: 400 })
+    if (!wallet_address || !name?.trim()) {
+      return NextResponse.json(
+        { success: false, error: "Wallet address and valid name are required" },
+        { status: 400 }
+      );
     }
 
-    if (name.trim().length === 0) {
-      return NextResponse.json({ success: false, error: "Name cannot be empty" }, { status: 400 })
-    }
-
-    let query = supabase
+    const { data: user, error } = await supabase
       .from("users")
       .update({
         name: name.trim(),
         updated_at: new Date().toISOString(),
       })
-      .select()
-
-    query = query.eq("wallet_address", wallet_address.toLowerCase())
-
-    const { data: user, error } = await query.single()
+      .eq("wallet_address", wallet_address.toLowerCase())
+      .select("*, user_stats(*)")
+      .single();
 
     if (error) {
-      console.error("Error updating user:", error)
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+      console.error("Update user error:", error);
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ success: true, user })
+    return NextResponse.json({ success: true, user });
   } catch (error) {
-    console.error("Error in PATCH /api/users/profile:", error)
-    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })
+    console.error("PATCH /api/users/profile error:", error);
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
