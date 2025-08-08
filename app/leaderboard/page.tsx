@@ -8,34 +8,7 @@ import { ArrowLeft, Trophy, Medal, Crown, Star } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
 import { useLeaderboard } from "@/hooks/useLeaderboard"
-
-// app/leaderboard/page.tsx
-import { debugUserStats } from '@/lib/points-system';
-
-export default function LeaderboardPage() {
-  const debugUser = async () => {
-    // Replace with a real user ID from your Supabase users table
-    const userId = 'put-real-user-id-here'; // Get this from your database
-    await debugUserStats(userId);
-    console.log('Debug complete - check console for results');
-  };
-
-  return (
-    <div>
-      {/* Temporary debug button - remove after testing */}
-      <button 
-        onClick={debugUser}
-        className="mb-4 bg-red-500 text-white px-4 py-2 rounded text-sm"
-        style={{ backgroundColor: 'red', color: 'white', padding: '8px 16px', marginBottom: '16px' }}
-      >
-        🔍 Debug User Stats
-      </button>
-      
-      {/* Your existing leaderboard content */}
-      {/* ... whatever leaderboard code you have ... */}
-    </div>
-  );
-}
+import { debugUserStats } from '@/lib/points-system'
 
 type LeaderboardEntry = {
   rank: number
@@ -65,6 +38,17 @@ export default function LeaderboardPage() {
     refresh,
     totalUsers,
   } = useLeaderboard({ period: "all-time", category: "overall", limit: 50 })
+
+  // Debug function integrated into main component
+  const debugUser = async () => {
+    if (!user?.id) {
+      console.log('No user ID available for debugging')
+      return
+    }
+    // Use the actual user's ID instead of placeholder
+    await debugUserStats(user.id)
+    console.log('Debug complete - check console for results')
+  }
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -151,6 +135,20 @@ export default function LeaderboardPage() {
             Refresh
           </Button>
         </div>
+
+        {/* Debug button - only show in development or for testing */}
+        {process.env.NODE_ENV === 'development' && user && (
+          <div className="mb-4">
+            <Button 
+              onClick={debugUser}
+              variant="destructive"
+              size="sm"
+              className="bg-red-500 hover:bg-red-600"
+            >
+              🔍 Debug User Stats
+            </Button>
+          </div>
+        )}
 
         <Card className="mb-6">
           <CardHeader className="text-center">
