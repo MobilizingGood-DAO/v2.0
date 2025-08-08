@@ -9,6 +9,34 @@ import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
 import { useLeaderboard } from "@/hooks/useLeaderboard"
 
+// app/leaderboard/page.tsx
+import { debugUserStats } from '@/lib/points-system';
+
+export default function LeaderboardPage() {
+  const debugUser = async () => {
+    // Replace with a real user ID from your Supabase users table
+    const userId = 'put-real-user-id-here'; // Get this from your database
+    await debugUserStats(userId);
+    console.log('Debug complete - check console for results');
+  };
+
+  return (
+    <div>
+      {/* Temporary debug button - remove after testing */}
+      <button 
+        onClick={debugUser}
+        className="mb-4 bg-red-500 text-white px-4 py-2 rounded text-sm"
+        style={{ backgroundColor: 'red', color: 'white', padding: '8px 16px', marginBottom: '16px' }}
+      >
+        🔍 Debug User Stats
+      </button>
+      
+      {/* Your existing leaderboard content */}
+      {/* ... whatever leaderboard code you have ... */}
+    </div>
+  );
+}
+
 type LeaderboardEntry = {
   rank: number
   id: string
